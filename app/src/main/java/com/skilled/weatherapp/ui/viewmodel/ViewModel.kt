@@ -22,11 +22,19 @@ class ViewModel: ViewModel() {
         GlobalScope.launch(Dispatchers.IO){
             weather.postValue(Resource.Loading())
             val response = weatherRepository.getWeatherByCityName("London")
-            weather.postValue(handlerMovie(response))
+            weather.postValue(handlerWeather(response))
         }
     }
 
-    private fun handlerMovie(response: Response<WeatherResult>): Resource<WeatherResult> {
+    fun requestByCoordinates(lat: Double, lon: Double){
+        GlobalScope.launch(Dispatchers.IO){
+            weather.postValue(Resource.Loading())
+            val response = weatherRepository.getWeatherByCoordinates(lat, lon)
+            weather.postValue(handlerWeather(response))
+        }
+    }
+
+    private fun handlerWeather(response: Response<WeatherResult>): Resource<WeatherResult> {
         if (response.isSuccessful) {
             response.body()?.let {
                 return Resource.Success(it)
