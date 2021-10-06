@@ -1,9 +1,10 @@
-package com.skilled.weatherapp
+package com.skilled.weatherapp.ui
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.skilled.weatherapp.R
 
 class SplashActivity : AppCompatActivity() {
 
