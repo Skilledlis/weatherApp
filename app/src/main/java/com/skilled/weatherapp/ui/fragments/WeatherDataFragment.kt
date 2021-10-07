@@ -7,18 +7,20 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.appbar.AppBarLayout
+import com.skilled.weatherapp.R
 import com.skilled.weatherapp.databinding.WeatherDataFragmentBinding
 import com.skilled.weatherapp.ui.viewmodel.ViewModel
 import com.skilled.weatherapp.util.Constants
@@ -44,7 +46,7 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
-    private lateinit var locationManager: LocationManager
+    //    private lateinit var locationManager: LocationManager
     var gpsStatus = false
 
     private lateinit var locationName: String
@@ -52,7 +54,6 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     var lon: Double = 0.0
 
 
-    @SuppressLint("MissingPermission")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -65,24 +66,15 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
             LocationServices.getFusedLocationProviderClient(requireContext())
 
         checkGpsStatus()
-        if (hasLocationPermission(requireContext()) && gpsStatus) {
-            fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
-                lat = location.latitude
-                lon = location.longitude
-                viewModel.requestByCoordinates(lat, lon)
-                saveData()
-            }
-            Log.d("WeatherDataFragment", "onCreate11111:  $lat")
+        loadData()
+        updateData()
 
-        } else {
-            EasyPermissions.requestPermissions(
-                this,
-                "This application cannot work without Location Permission.",
-                Constants.PERMISSION_LOCATION_REQUEST_CODE,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
+        binding.progressBar.setOnClickListener{
+            checkGpsStatus()
+            loadData()
+            updateData()
         }
+
 
         return binding.root
 
@@ -95,7 +87,6 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
         collapseTitleBar()
 
-        Toast.makeText(requireContext(), "$lat $lon", Toast.LENGTH_SHORT).show()
 
         viewModel.weather.observe(viewLifecycleOwner, { response ->
             when (response) {
@@ -103,7 +94,7 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                     response.data?.let {
                         Picasso.get()
                             .load(IMAGE_PATH + it.weather[0].icon + IMAGE_EXTENSION)
-                            .into(binding.imageView3)
+                            .into(binding.weatherIcon)
                         binding.location.text = it.name
                         locationName = it.name
                         val updateAt: Long = it.dt.toLong()
@@ -122,6 +113,29 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
             }
         })
         loadData()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun updateData() {
+        if (hasLocationPermission(requireContext()) && gpsStatus && isOnOnline()) {
+            fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+                lat = location.latitude
+                lon = location.longitude
+                viewModel.requestByCoordinates(lat, lon)
+                viewModel.requestOneCall(lat,lon)
+                saveData()
+            }
+            Log.d("WeatherDataFragment", "onCreate11111:  $lat")
+
+        } else {
+            EasyPermissions.requestPermissions(
+                this,
+                "This application cannot work without Location Permission.",
+                Constants.PERMISSION_LOCATION_REQUEST_CODE,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        }
     }
 
     private fun saveData() {
@@ -179,28 +193,57 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
     override fun onPermissionsGranted(requestCode: Int, perms: List<String>) {
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
     private fun checkGpsStatus() {
-        locationManager =
+        val locationManager =
             requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         gpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         if (gpsStatus) {
             return
         } else {
 
-            AlertDialog.Builder(requireContext()).setTitle("{EQ").setMessage("ASSSSSSSD")
+            AlertDialog.Builder(requireContext()).setTitle(R.string.Please_check_your_GPS)
+                .setMessage(R.string.this_application_cannot_work_without_location_go_to_gps_settings)
                 .setPositiveButton(
-                    "YES",
+                    R.string.yes,
                     { _: DialogInterface, _: Int -> startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) })
-                .setNegativeButton("NO", {_: DialogInterface, _: Int -> activity?.finish()})
+                .setNegativeButton(
+                    R.string.no,
+                    { _: DialogInterface, _: Int -> activity?.finish() })
                 .show()
 
 
         }
+    }
+
+    private fun isOnOnline(): Boolean {
+        val connectivityManager =
+            requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        return if (capabilities != null) {
+            return when {
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+                else -> false
+            }
+        } else {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.Please_check_your_network_connection)
+                .setMessage(R.string.this_application_cannot_work_without_network_go_to_gps_settings)
+                .setPositiveButton(
+                    R.string.yes,
+                    { _: DialogInterface, _: Int -> startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) })
+                .setNegativeButton(
+                    R.string.no, { _: DialogInterface, _: Int -> activity?.finish() })
+                .show()
+            return false
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
 }

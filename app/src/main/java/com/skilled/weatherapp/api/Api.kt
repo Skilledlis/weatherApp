@@ -1,5 +1,6 @@
 package com.skilled.weatherapp.api
 
+import com.skilled.weatherapp.models.OneCallResponse
 import com.skilled.weatherapp.models.WeatherResult
 import com.skilled.weatherapp.util.Constants.Companion.API_KEY
 import retrofit2.Response
@@ -30,6 +31,17 @@ interface Api {
         units: String = "metric"
     ):Response<WeatherResult>
 
-//    @GET("onecall")
-//    suspend fun getOnCall()
+    @GET("onecall")
+    suspend fun getOneCall(
+        @Query("appid")
+        appID: String = API_KEY,
+        @Query("lat")
+        lat: Double,
+        @Query("lon")
+        lon: Double,
+        @Query("units")
+        units: String = "metric",
+        @Query("exclude")
+        exclude: String = "alerts,minutely,current"
+    ):Response<OneCallResponse>
 }
