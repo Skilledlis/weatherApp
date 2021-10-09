@@ -17,11 +17,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.appbar.AppBarLayout
 import com.skilled.weatherapp.R
+import com.skilled.weatherapp.adapter.DailyAdapter
+import com.skilled.weatherapp.adapter.HourlyAdapter
 import com.skilled.weatherapp.databinding.WeatherDataFragmentBinding
+import com.skilled.weatherapp.models.Daily
 import com.skilled.weatherapp.ui.viewmodel.ViewModel
 import com.skilled.weatherapp.util.Constants
 import com.skilled.weatherapp.util.Constants.Companion.IMAGE_EXTENSION
@@ -43,6 +47,8 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
 
     private lateinit var viewModel: ViewModel
+    lateinit var hourlyAdapter: HourlyAdapter
+    lateinit var dailyAdapter: DailyAdapter
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -65,6 +71,7 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         fusedLocationProviderClient =
             LocationServices.getFusedLocationProviderClient(requireContext())
 
+        setupRecyclerView()
         checkGpsStatus()
         loadData()
         updateData()
@@ -80,6 +87,7 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
@@ -99,7 +107,7 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                         locationName = it.name
                         val updateAt: Long = it.dt.toLong()
                         binding.updateAt.text = SimpleDateFormat(
-                            "hh:mm a",
+                            "dd/MM HH:mm",
                             Locale.ENGLISH
                         ).format(Date(updateAt * 1000))
                         binding.temp.text = it.main.temp.toInt().toString() + "℃"
@@ -109,6 +117,17 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                         binding.description.text = it.weather[0].description.capitalize()
                     }
                     binding.progressBar.visibility = View.GONE
+                }
+            }
+        })
+
+        viewModel.weatherOneCall.observe(viewLifecycleOwner, {responce ->
+            when(responce){
+                is Resource.Success ->{
+                    responce.data?.let {
+                        hourlyAdapter.differ.submitList(it.hourly)
+                        dailyAdapter.differ.submitList(it.daily)
+                    }
                 }
             }
         })
@@ -210,8 +229,6 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                     R.string.no,
                     { _: DialogInterface, _: Int -> activity?.finish() })
                 .show()
-
-
         }
     }
 
@@ -238,6 +255,19 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                     R.string.no, { _: DialogInterface, _: Int -> activity?.finish() })
                 .show()
             return false
+        }
+    }
+
+    private fun setupRecyclerView() {
+        hourlyAdapter = HourlyAdapter()
+        dailyAdapter = DailyAdapter()
+        binding.hourlyRv.apply {
+            adapter = hourlyAdapter
+            layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
+        }
+        binding.dailyRv.apply {
+            adapter = dailyAdapter
+            layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
         }
     }
 

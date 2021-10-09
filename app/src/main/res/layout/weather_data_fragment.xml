@@ -9,7 +9,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
-        android:layout_height="250dp">
+        android:layout_height="200dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:id="@+id/collapsingToolbar"
@@ -42,17 +42,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    android:id="@+id/update_at"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Update at"
-                    android:textSize="20sp"
-                    app:layout_constraintEnd_toEndOf="@+id/location"
-                    app:layout_constraintStart_toStartOf="@+id/location"
-                    app:layout_constraintTop_toBottomOf="@+id/location" />
-
                 <ImageView
                     android:id="@+id/locationIcon"
                     android:layout_width="wrap_content"
@@ -72,7 +61,7 @@
                     android:orientation="horizontal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/update_at">
+                    app:layout_constraintTop_toBottomOf="@+id/location">
 
                     <ImageView
                         android:id="@+id/weatherIcon"
@@ -120,10 +109,10 @@
                         android:text="" />
 
                     <TextView
-                        android:paddingStart="4sp"
-                        android:paddingEnd="4sp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:paddingStart="4sp"
+                        android:paddingEnd="4sp"
                         android:text="@string/feels_like" />
 
                     <TextView
@@ -167,16 +156,17 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/hourly_rv"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@+id/update_at" />
 
             <TextView
                 android:id="@+id/daily_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:text="Daily"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/hourly_rv" />
@@ -185,9 +175,29 @@
                 android:id="@+id/daily_rv"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/daily_tv" />
+
+            <TextView
+                android:id="@+id/update_at"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/update"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Update at"
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="@+id/update_at"
+                app:layout_constraintEnd_toStartOf="@+id/update_at" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
