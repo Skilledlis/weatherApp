@@ -25,7 +25,6 @@ import com.skilled.weatherapp.R
 import com.skilled.weatherapp.adapter.DailyAdapter
 import com.skilled.weatherapp.adapter.HourlyAdapter
 import com.skilled.weatherapp.databinding.WeatherDataFragmentBinding
-import com.skilled.weatherapp.models.Daily
 import com.skilled.weatherapp.ui.viewmodel.ViewModel
 import com.skilled.weatherapp.util.Constants
 import com.skilled.weatherapp.util.Constants.Companion.IMAGE_EXTENSION
@@ -76,7 +75,7 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         loadData()
         updateData()
 
-        binding.progressBar.setOnClickListener{
+        binding.progressBar.setOnClickListener {
             checkGpsStatus()
             loadData()
             updateData()
@@ -94,6 +93,8 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 //        viewModel.requestCity()
 
         collapseTitleBar()
+
+
 
 
         viewModel.weather.observe(viewLifecycleOwner, { response ->
@@ -114,16 +115,20 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                         binding.maxTemp.text = it.main.temp_max.toInt().toString() + "℃"
                         binding.minTemp.text = it.main.temp_min.toInt().toString() + "℃"
                         binding.feelsLikeTemp.text = it.main.feels_like.toInt().toString() + "℃"
-                        binding.description.text = it.weather[0].description.capitalize()
+                        binding.description.text = it.weather[0].description.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(
+                                Locale.getDefault()
+                            ) else it.toString()
+                        }
                     }
                     binding.progressBar.visibility = View.GONE
                 }
             }
         })
 
-        viewModel.weatherOneCall.observe(viewLifecycleOwner, {responce ->
-            when(responce){
-                is Resource.Success ->{
+        viewModel.weatherOneCall.observe(viewLifecycleOwner, { responce ->
+            when (responce) {
+                is Resource.Success -> {
                     responce.data?.let {
                         hourlyAdapter.differ.submitList(it.hourly)
                         dailyAdapter.differ.submitList(it.daily)
@@ -141,7 +146,7 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                 lat = location.latitude
                 lon = location.longitude
                 viewModel.requestByCoordinates(lat, lon)
-                viewModel.requestOneCall(lat,lon)
+                viewModel.requestOneCall(lat, lon)
                 saveData()
             }
             Log.d("WeatherDataFragment", "onCreate11111:  $lat")
@@ -201,11 +206,13 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                 isShow = false
             }
         })
+
     }
+
 
     override fun onPermissionsDenied(requestCode: Int, perms: List<String>) {
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
-            SettingsDialog.Builder(requireContext()).build().show();
+            SettingsDialog.Builder(requireContext()).build().show()
         }
     }
 

@@ -10,4 +10,7 @@
     <string name="celsius">℃</string>
     <string name="this_application_cannot_work_without_location_go_to_gps_settings">This application cannot work without Location. Go to GPS settings?</string>
     <string name="this_application_cannot_work_without_network_go_to_gps_settings">This application cannot work without network. Go to Network settings?</string>
+    <string name="city">City</string>
+    <string name="daily">Daily</string>
+    <string name="update_at">Update at</string>
 </resources>

@@ -43,21 +43,5 @@ class SplashActivity : AppCompatActivity() {
             PERMISSION_LOCATION_REQUEST_CODE,
             Manifest.permission.ACCESS_FINE_LOCATION
         )
-//        checkGpsStatus()
     }
-
-//    private fun checkGpsStatus() {
-//        locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-//        gpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-//        if (gpsStatus) {
-//            return
-//        } else {
-//            Toast.makeText(this, "Your GPS turned off", Toast.LENGTH_SHORT).show()
-//                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-//            onPause()
-//
-//        }
-//    }
-
-
 }
