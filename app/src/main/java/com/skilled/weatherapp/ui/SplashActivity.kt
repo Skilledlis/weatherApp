@@ -32,11 +32,12 @@ class SplashActivity : AppCompatActivity() {
 
         splashActivity = findViewById(R.id.splash_activity)
         splashActivity.alpha = 0f
-        splashActivity.animate().setDuration(5000).alpha(1f).withEndAction {
+        splashActivity.animate().setDuration(2000).alpha(1f).withEndAction {
             startActivity(Intent(this, MainActivity::class.java))
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             finish()
         }
+
         EasyPermissions.requestPermissions(
             this,
             "This application cannot work without Location Permission.",

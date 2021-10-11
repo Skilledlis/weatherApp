@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    android:layout_height="match_parent">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
+        android:background="@android:color/transparent"
         android:layout_width="match_parent"
         android:layout_height="200dp">
 
@@ -31,6 +31,7 @@
                 android:layout_height="match_parent">
 
                 <ImageButton
+                    android:id="@+id/searchButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -212,11 +213,12 @@
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/shareButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:baselineAlignBottom="false"
         android:clickable="true"
-        android:src="@drawable/ic_baseline_send_24"
+        android:src="@drawable/ic_baseline_share_24"
         app:fabSize="mini"
         app:layout_anchor="@id/appBar"
         app:layout_anchorGravity="bottom|end"

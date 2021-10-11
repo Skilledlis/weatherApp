@@ -1,5 +1,8 @@
 package com.skilled.weatherapp.ui.viewmodel
 
+import android.annotation.SuppressLint
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.skilled.weatherapp.models.OneCallResponse
@@ -11,19 +14,18 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import retrofit2.Response
 
-class ViewModel: ViewModel() {
-
+@SuppressLint("StaticFieldLeak")
+class ViewModel(application: Application): AndroidViewModel(application) {
 
     private val weatherRepository: Repository = Repository()
 
     val weather: MutableLiveData<Resource<WeatherResult>> = MutableLiveData()
     val weatherOneCall: MutableLiveData<Resource<OneCallResponse>> = MutableLiveData()
 
-
-    fun requestByCity() {
+    fun requestByCity(city: String) {
         GlobalScope.launch(Dispatchers.IO){
             weather.postValue(Resource.Loading())
-            val response = weatherRepository.getWeatherByCityName("London")
+            val response = weatherRepository.getWeatherByCityName(city)
             weather.postValue(handlerWeather(response))
         }
     }
@@ -61,4 +63,7 @@ class ViewModel: ViewModel() {
         }
         return Resource.Error(response.message())
     }
+
+
+
 }

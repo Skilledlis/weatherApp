@@ -11,14 +11,15 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.appbar.AppBarLayout
 import com.skilled.weatherapp.R
@@ -33,25 +34,25 @@ import com.skilled.weatherapp.util.LocationPermission.hasLocationPermission
 import com.skilled.weatherapp.util.Resource
 import com.squareup.picasso.Picasso
 import com.vmadalin.easypermissions.EasyPermissions
-import com.vmadalin.easypermissions.dialogs.SettingsDialog
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
-class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
+class WeatherDataFragment : Fragment() {
     private var _binding: WeatherDataFragmentBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
 
-
     private lateinit var viewModel: ViewModel
     lateinit var hourlyAdapter: HourlyAdapter
     lateinit var dailyAdapter: DailyAdapter
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    lateinit var locationRequest: LocationRequest
 
-    //    private lateinit var locationManager: LocationManager
+
     var gpsStatus = false
 
     private lateinit var locationName: String
@@ -70,33 +71,36 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
         fusedLocationProviderClient =
             LocationServices.getFusedLocationProviderClient(requireContext())
 
-        setupRecyclerView()
-        checkGpsStatus()
-        loadData()
-        updateData()
 
-        binding.progressBar.setOnClickListener {
-            checkGpsStatus()
-            loadData()
-            updateData()
+        binding.searchButton.setOnClickListener {
+            val navController = it.findNavController()
+            navController.navigate(R.id.searchFragment)
+        }
+
+        locationRequest = LocationRequest.create().apply {
+            interval = TimeUnit.SECONDS.toMillis(60)
+            fastestInterval = TimeUnit.SECONDS.toMillis(30)
+            maxWaitTime = TimeUnit.MINUTES.toSeconds(2)
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            smallestDisplacement = 1000f
         }
 
 
-        return binding.root
-
-    }
-
-    @SuppressLint("SetTextI18n")
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-
-//        viewModel.requestCity()
-
+        setupRecyclerView()
+        checkGpsStatus()
         collapseTitleBar()
 
+        loadData()
+        updateData()
 
 
+        inflateView()
 
+        return binding.root
+    }
+
+
+    fun inflateView() {
         viewModel.weather.observe(viewLifecycleOwner, { response ->
             when (response) {
                 is Resource.Success -> {
@@ -136,21 +140,42 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
                 }
             }
         })
-        loadData()
+
+        binding.shareButton.setOnClickListener {
+            activity?.let {
+                val sendIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "${binding.location.text} \n" +
+                                "${binding.temp.text} \n" +
+                                "${binding.description.text} \n" +
+                                "${binding.updateAt.text}"
+                    )
+                    putExtra(Intent.EXTRA_SUBJECT, "Weather")
+                    type = "text/plain"
+                }
+
+                val shareIntent = Intent.createChooser(sendIntent, null)
+
+                it.startActivity(shareIntent)
+            }
+
+        }
     }
 
     @SuppressLint("MissingPermission")
     private fun updateData() {
         if (hasLocationPermission(requireContext()) && gpsStatus && isOnOnline()) {
             fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
-                lat = location.latitude
-                lon = location.longitude
-                viewModel.requestByCoordinates(lat, lon)
-                viewModel.requestOneCall(lat, lon)
-                saveData()
+                if (location != null) {
+                    lat = location.latitude
+                    lon = location.longitude
+                    saveData()
+                    viewModel.requestByCoordinates(lat, lon)
+                    viewModel.requestOneCall(lat, lon)
+                }
             }
-            Log.d("WeatherDataFragment", "onCreate11111:  $lat")
-
         } else {
             EasyPermissions.requestPermissions(
                 this,
@@ -172,8 +197,6 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
             putString("LAT", lat.toString())
             putString("LON", lon.toString())
         }.apply()
-
-        Log.d("WeatherDataFragment", "saveDate:  $lat")
     }
 
     private fun loadData() {
@@ -209,15 +232,6 @@ class WeatherDataFragment : Fragment(), EasyPermissions.PermissionCallbacks {
 
     }
 
-
-    override fun onPermissionsDenied(requestCode: Int, perms: List<String>) {
-        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
-            SettingsDialog.Builder(requireContext()).build().show()
-        }
-    }
-
-    override fun onPermissionsGranted(requestCode: Int, perms: List<String>) {
-    }
 
     private fun checkGpsStatus() {
         val locationManager =
